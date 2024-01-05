@@ -1,0 +1,94 @@
+%% Project- Finding Coefficients of Drag and Rolling Resistance
+% Name: Giovanni Coraluppi, Shawn Krishnan, Sasha Kroman, Micah Nowlin
+% Date: 18 April 2023
+% Course: 24-311 - Numerical Methods
+
+clear all % Remove existing variables from workspace
+close all % close all figures etc.
+clc % clean command window
+
+%% Data Import
+
+% Importing the file
+accel_data = readmatrix('Acceleration Data4.xls');
+
+% Separating columns
+time = accel_data(:,1);
+a_x = -1*accel_data(:,2);
+a_y = -1*accel_data(:,3);
+a_z = -1*accel_data(:,4);
+a_abs = -1*accel_data(:,5);
+
+% Initial Velocity in m/s^2
+initial_velocity = 13.4; 
+
+%% Find Velocity from Acceleration
+
+t = time;
+a = 2*a_z;
+v_0 = initial_velocity;
+
+[t1, v1] = integrate(t, a, v_0);
+
+%% Find C1 and C2 Coefficients
+
+C = 0:0.001:0.1;
+minloss = [0, 0, 10000000000];
+graphvec = zeros(length(C).^2+1, 3);
+i = 1;
+
+for c1 = 0:0.0001:0.001
+    for c2 = 0:1:10
+        graphvec(i, 1) = c1;
+        graphvec(i, 2) = c2;
+        curloss = find_loss(c1, c2, t1, v_0, v1);
+        graphvec(i, 3) = curloss;
+        if curloss < minloss(1, 3)
+            minloss = graphvec(i, 1:3);
+        end
+        i = i + 1;
+    end
+end
+
+
+figure(1)   
+plot3(graphvec(:,1),graphvec(:,2),graphvec(:,3), 'o')
+xlabel("C1")
+ylabel("C2")
+zlabel("Loss")
+xlim([0 0.001])
+ylim([0 0.5])
+zlim([0 15000])
+
+dvdt = @(t,v) -minloss(1)*sign(v)*v.^2 -minloss(2);
+[t2,v2] = eulode(dvdt,[0, t1(end)],v_0,.01);
+figure(2)
+hold on
+plot(t1, v1)
+title('Velocity vs Time')
+xlabel('Time [s]')
+ylabel('Velocity [m/s]')
+plot(t2, v2)
+hold off
+
+function loss = find_loss(c1, c2, t1, v_0, v1)
+    dvdt = @(t,v) -c1*sign(v)*v.^2 -c2;
+    [~,v2] = eulode(dvdt,[0, t1(end)],v_0,.01);
+    loss = 0;
+    for j = 1:length(v1)
+        loss = loss + (v1(j) - v2(j)).^2;
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
