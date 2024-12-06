@@ -1,4 +1,4 @@
-# NumericalMethodsFinalProject
+# 24-311 Numerica Methods Final Project
 Numerically Calculating Coefficient of Drag and Rolling Resistance
 
 Car models undergo extensive wind tunnel testing to analyze aerodynamic qualities like drag, lift, and thrust, enabling modifications for consumer needs. 
